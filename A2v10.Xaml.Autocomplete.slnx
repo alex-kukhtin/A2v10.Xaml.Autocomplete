@@ -4,7 +4,7 @@
     <Platform Name="arm64" />
     <Platform Name="x86" />
   </Configurations>
-  <Project Path="A2v10.Xaml.Autocomplete.csproj">
+  <Project Path="A2v10.Xaml.Autocomplete.csproj" Id="3391f1d1-e4b7-408e-8b55-ab3fc67748b9">
     <Platform Solution="*|arm64" Project="arm64" />
     <Platform Solution="*|x86" Project="x86" />
   </Project>
