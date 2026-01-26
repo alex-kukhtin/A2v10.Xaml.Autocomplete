@@ -7,6 +7,9 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudio.Text.Operations;
 using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -26,16 +29,41 @@ internal class XamlCompletionSource(ITextStructureNavigatorSelectorService _stru
 
     public Task<CompletionContext> GetCompletionContextAsync(IAsyncCompletionSession session, CompletionTrigger trigger, SnapshotPoint triggerLocation, SnapshotSpan applicableToSpan, CancellationToken token)
     {
-        throw new NotImplementedException();
+        var builder = ImmutableArray.CreateBuilder<CompletionItem>();
+
+        // Получаем текст до текущей позиции
+        var line = triggerLocation.GetContainingLine();
+        string textBefore = line.Snapshot.GetText(line.Start, triggerLocation.Position - line.Start);
+
+        if (textBefore.EndsWith("<"))
+        {
+            builder.Add(new CompletionItem("Page", this, TagIcon));
+            builder.Add(new CompletionItem("Dialog", this, TagIcon));
+            builder.Add(new CompletionItem("Alert", this, TagIcon));
+        }
+        else if (textBefore.EndsWith(" "))
+        {
+            builder.Add(new CompletionItem("Name", this, PropertyIcon));
+            builder.Add(new CompletionItem("Title", this, PropertyIcon));
+        }
+        else
+        {
+            // По умолчанию — ничего или можно вернуть все
+        }
+
+        var context = new CompletionContext(builder.ToImmutableArray());
+        return Task.FromResult(context);
     }
 
     public Task<object> GetDescriptionAsync(IAsyncCompletionSession session, CompletionItem item, CancellationToken token)
     {
-        throw new NotImplementedException();
+        String description = $"XML element or attribute: {item.DisplayText}";
+        return Task.FromResult<object>(description);
     }
 
     public CompletionStartData InitializeCompletion(CompletionTrigger trigger, SnapshotPoint triggerLocation, CancellationToken token)
     {
-        throw new NotImplementedException();
+        var span = new SnapshotSpan(triggerLocation, 0);
+        return new CompletionStartData(CompletionParticipation.ProvidesItems, span);
     }
 }
