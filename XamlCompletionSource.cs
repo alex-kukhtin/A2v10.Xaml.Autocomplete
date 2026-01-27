@@ -1,4 +1,9 @@
-﻿// Copyright © 2021-2024 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2026 Oleksandr Kukhtin. All rights reserved.
+
+using System;
+using System.Collections.Immutable;
+using System.Threading;
+using System.Threading.Tasks;
 
 using Microsoft.VisualStudio.Core.Imaging;
 using Microsoft.VisualStudio.Language.Intellisense.AsyncCompletion;
@@ -6,12 +11,6 @@ using Microsoft.VisualStudio.Language.Intellisense.AsyncCompletion.Data;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudio.Text.Operations;
-using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace A2v10XamlAutocomplete;
 
@@ -33,10 +32,12 @@ internal class XamlCompletionSource(ITextStructureNavigatorSelectorService _stru
 
         // Получаем текст до текущей позиции
         var line = triggerLocation.GetContainingLine();
-        string textBefore = line.Snapshot.GetText(line.Start, triggerLocation.Position - line.Start);
+        String textBefore = line.Snapshot.GetText(line.Start, triggerLocation.Position - line.Start);
 
         if (textBefore.EndsWith("<"))
         {
+            builder.Add(new CompletionItem("!--", this, XmlCommentIcon));
+            builder.Add(new CompletionItem("![CDATA[", this, XmlCDataIcon));
             builder.Add(new CompletionItem("Page", this, TagIcon));
             builder.Add(new CompletionItem("Dialog", this, TagIcon));
             builder.Add(new CompletionItem("Alert", this, TagIcon));
@@ -46,19 +47,20 @@ internal class XamlCompletionSource(ITextStructureNavigatorSelectorService _stru
             builder.Add(new CompletionItem("Name", this, PropertyIcon));
             builder.Add(new CompletionItem("Title", this, PropertyIcon));
         }
-        else
+        else if (textBefore.EndsWith("\""))
         {
-            // По умолчанию — ничего или можно вернуть все
+            builder.Add(new CompletionItem("True", this, EnumIcon));
+            builder.Add(new CompletionItem("False", this, EnumIcon));
         }
 
         var context = new CompletionContext(builder.ToImmutableArray());
         return Task.FromResult(context);
     }
 
-    public Task<object> GetDescriptionAsync(IAsyncCompletionSession session, CompletionItem item, CancellationToken token)
+    public Task<Object> GetDescriptionAsync(IAsyncCompletionSession session, CompletionItem item, CancellationToken token)
     {
         String description = $"XML element or attribute: {item.DisplayText}";
-        return Task.FromResult<object>(description);
+        return Task.FromResult<Object>(description);
     }
 
     public CompletionStartData InitializeCompletion(CompletionTrigger trigger, SnapshotPoint triggerLocation, CancellationToken token)

@@ -54,6 +54,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="XamlCompletionCommitManager.cs" />
+    <Compile Include="XamlCompletionCommitManagerProvider.cs" />
     <Compile Include="XamlCompletionSource.cs" />
     <Compile Include="XamlCompletionSourceProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
