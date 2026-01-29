@@ -1,6 +1,7 @@
 ﻿// Copyright © 2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
@@ -22,6 +23,7 @@ internal class XamlCompletionSource(ITextStructureNavigatorSelectorService _stru
 
         // Получаем текст до текущей позиции
         var line = triggerLocation.GetContainingLine();
+        var spanBeforeCaret = new SnapshotSpan(line.Start, triggerLocation);
         String textBefore = line.Snapshot.GetText(line.Start, triggerLocation.Position - line.Start);
 
         if (textBefore.EndsWith("<"))
