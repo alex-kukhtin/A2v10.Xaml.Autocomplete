@@ -21,7 +21,7 @@
     <ProjectGuid>{3391F1D1-E4B7-408E-8B55-AB3FC67748B9}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>AsyncCompletionSample</RootNamespace>
+    <RootNamespace>A2v10XamlAutocomplete</RootNamespace>
     <AssemblyName>AsyncCompletionSample</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <GeneratePkgDefFile>false</GeneratePkgDefFile>
@@ -54,6 +54,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Element.cs" />
     <Compile Include="XamlCompletionCommitManager.cs" />
     <Compile Include="XamlCompletionCommitManagerProvider.cs" />
     <Compile Include="XamlCompletionSource.cs" />

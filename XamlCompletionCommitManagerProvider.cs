@@ -1,11 +1,11 @@
 ﻿// Copyright © 2026 Oleksandr Kukhtin. All rights reserved.
 
+using System.Collections.Generic;
+using System.ComponentModel.Composition;
+
 using Microsoft.VisualStudio.Language.Intellisense.AsyncCompletion;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.Composition;
 
 namespace A2v10XamlAutocomplete;
 

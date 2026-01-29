@@ -16,16 +16,6 @@ namespace A2v10XamlAutocomplete;
 
 internal class XamlCompletionSource(ITextStructureNavigatorSelectorService _structureNavigatorSelector) : IAsyncCompletionSource
 {
-
-    static Guid ImageLibraryGuid = new Guid("ae27a6b0-e345-4288-96df-5eaf394ee369");
-
-    static ImageElement TagIcon = new ImageElement(new ImageId(ImageLibraryGuid, 1873), "Tag");
-    static ImageElement PropertyIcon = new ImageElement(new ImageId(ImageLibraryGuid, 2429), "Property");
-    static ImageElement EnumIcon = new ImageElement(new ImageId(ImageLibraryGuid, 1120), "Enum");
-    static ImageElement XmlCommentIcon = new ImageElement(new ImageId(ImageLibraryGuid, 3568), "XmlComment");
-    static ImageElement XmlCDataIcon = new ImageElement(new ImageId(ImageLibraryGuid, 3567), "XmlCData");
-
-
     public Task<CompletionContext> GetCompletionContextAsync(IAsyncCompletionSession session, CompletionTrigger trigger, SnapshotPoint triggerLocation, SnapshotSpan applicableToSpan, CancellationToken token)
     {
         var builder = ImmutableArray.CreateBuilder<CompletionItem>();
@@ -36,21 +26,21 @@ internal class XamlCompletionSource(ITextStructureNavigatorSelectorService _stru
 
         if (textBefore.EndsWith("<"))
         {
-            builder.Add(new CompletionItem("!--", this, XmlCommentIcon));
-            builder.Add(new CompletionItem("![CDATA[", this, XmlCDataIcon));
-            builder.Add(new CompletionItem("Page", this, TagIcon));
-            builder.Add(new CompletionItem("Dialog", this, TagIcon));
-            builder.Add(new CompletionItem("Alert", this, TagIcon));
+            builder.Add(Element.Create("!--", Element.ElemKind.Comment, this));
+            builder.Add(Element.Create("![CDATA[", Element.ElemKind.CData, this));
+            builder.Add(Element.Create("Page", Element.ElemKind.Tag, this));
+            builder.Add(Element.Create("Dialog", Element.ElemKind.Tag, this));
+            builder.Add(Element.Create("Alert", Element.ElemKind.Tag, this));
         }
         else if (textBefore.EndsWith(" "))
         {
-            builder.Add(new CompletionItem("Name", this, PropertyIcon));
-            builder.Add(new CompletionItem("Title", this, PropertyIcon));
+            builder.Add(Element.Create("Name", Element.ElemKind.Property, this));
+            builder.Add(Element.Create("Title", Element.ElemKind.Property, this));
         }
         else if (textBefore.EndsWith("\""))
         {
-            builder.Add(new CompletionItem("True", this, EnumIcon));
-            builder.Add(new CompletionItem("False", this, EnumIcon));
+            builder.Add(Element.Create("True", Element.ElemKind.EnumValue, this));
+            builder.Add(Element.Create("False", Element.ElemKind.EnumValue, this));
         }
 
         var context = new CompletionContext(builder.ToImmutableArray());
