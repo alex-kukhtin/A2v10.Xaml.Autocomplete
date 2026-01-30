@@ -24,6 +24,11 @@ internal class XamlCompletionCommitManager : IAsyncCompletionCommitManager
 
     public CommitResult TryCommit(IAsyncCompletionSession session, ITextBuffer buffer, CompletionItem item, char typedChar, CancellationToken token)
     {
+        if (item.Properties.TryGetProperty<Element>(nameof(Element), out var elem))
+        {
+
+            return CommitResult.Unhandled; // use default commit mechanism.
+        }
         return CommitResult.Unhandled; // use default commit mechanism.
     }
 }
