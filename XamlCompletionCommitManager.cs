@@ -13,7 +13,7 @@ namespace A2v10XamlAutocomplete;
 
 internal class XamlCompletionCommitManager : IAsyncCompletionCommitManager
 {
-    ImmutableArray<Char> commitChars = new Char[] { ' ', '\'', '"', ',', '.', ';', ':' }.ToImmutableArray();
+    readonly ImmutableArray<Char> commitChars = [' ', '\'', '"', ',', '.', ';', ':'];
 
     public IEnumerable<char> PotentialCommitCharacters => commitChars;
 
