@@ -60,6 +60,8 @@ internal class XamlCompletionSource(ITextStructureNavigatorSelectorService _stru
 
         ITextStructureNavigator navigator = _structureNavigatorSelector.GetTextStructureNavigator(triggerLocation.Snapshot.TextBuffer);
         TextExtent extent = navigator.GetExtentOfWord(triggerLocation);
+        var ch = navigator.GetSpanOfFirstChild(extent.Span);
+        var sibl = navigator.GetSpanOfNextSibling(ch);
 
         var span = new SnapshotSpan(triggerLocation, 0);
         return new CompletionStartData(CompletionParticipation.ProvidesItems, span);
