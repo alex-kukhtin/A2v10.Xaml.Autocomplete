@@ -55,6 +55,13 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Element.cs" />
+    <Compile Include="Schema\XamlSchema.cs" />
+    <Compile Include="Schema\ElementInfo.cs" />
+    <Compile Include="Schema\PropertyInfo.cs" />
+    <Compile Include="Schema\AttachedPropertyInfo.cs" />
+    <Compile Include="Schema\XamlSchemaLoader.cs" />
+    <Compile Include="Parser\XmlContext.cs" />
+    <Compile Include="Parser\XmlContextParser.cs" />
     <Compile Include="XamlCompletionCommitManager.cs" />
     <Compile Include="XamlCompletionCommitManagerProvider.cs" />
     <Compile Include="XamlCompletionSource.cs" />
@@ -98,6 +105,12 @@
     <PackageReference Include="System.Collections.Immutable">
       <Version>8.0.0</Version>
     </PackageReference>
+    <PackageReference Include="Newtonsoft.Json">
+      <Version>13.0.3</Version>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\a2v10-xaml-schema.json" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="'$(VSToolsPath)' != ''" />

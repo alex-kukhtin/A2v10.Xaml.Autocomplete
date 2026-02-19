@@ -1,11 +1,10 @@
-﻿// Copyright © 2026 Oleksandr Kukhtin. All rights reserved.
+// Copyright © 2026 Oleksandr Kukhtin. All rights reserved.
 
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.ComponentModel.Composition;
 
 using Microsoft.VisualStudio.Language.Intellisense.AsyncCompletion;
 using Microsoft.VisualStudio.Text.Editor;
-using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.Utilities;
 
 namespace A2v10XamlAutocomplete;
@@ -15,19 +14,15 @@ namespace A2v10XamlAutocomplete;
 [ContentType("xml")]
 internal class XamlCompletionSourceProvider : IAsyncCompletionSourceProvider
 {
-    private readonly Dictionary<ITextView, IAsyncCompletionSource> cache = new();
-
-    [Import]
-    ITextStructureNavigatorSelectorService StructureNavigatorSelector { get; set; }
+    private readonly ConcurrentDictionary<ITextView, IAsyncCompletionSource> cache = new();
 
     public IAsyncCompletionSource GetOrCreate(ITextView textView)
     {
-        if (cache.TryGetValue(textView, out var itemSource))
-            return itemSource;
-
-        var source = new XamlCompletionSource(StructureNavigatorSelector); // opportunity to pass in MEF parts
-        textView.Closed += (o, e) => cache.Remove(textView); // clean up memory as files are closed
-        cache.Add(textView, source);
-        return source;
+        return cache.GetOrAdd(textView, tv =>
+        {
+            var source = new XamlCompletionSource();
+            tv.Closed += (o, e) => cache.TryRemove(tv, out _);
+            return source;
+        });
     }
 }

@@ -19,6 +19,9 @@ internal record Element
     static ImageElement EnumIcon = new ImageElement(new ImageId(ImageLibraryGuid, 1120), "Enum");
     static ImageElement XmlCommentIcon = new ImageElement(new ImageId(ImageLibraryGuid, 3568), "XmlComment");
     static ImageElement XmlCDataIcon = new ImageElement(new ImageId(ImageLibraryGuid, 3567), "XmlCData");
+    static ImageElement ClosingTagIcon = new ImageElement(new ImageId(ImageLibraryGuid, 1873), "ClosingTag");
+    static ImageElement AttachedPropertyIcon = new ImageElement(new ImageId(ImageLibraryGuid, 2429), "AttachedProperty");
+    static ImageElement BooleanIcon = new ImageElement(new ImageId(ImageLibraryGuid, 1120), "Boolean");
 
     public String Name { get; }
     public ElemKind Kind { get; }
@@ -28,7 +31,10 @@ internal record Element
         Property,
         EnumValue,
         CData,
-        Comment
+        Comment,
+        ClosingTag,
+        AttachedProperty,
+        Boolean
     }
 
 
@@ -43,8 +49,11 @@ internal record Element
         return kind switch
         {
             ElemKind.Tag => TagIcon,
+            ElemKind.ClosingTag => ClosingTagIcon,
             ElemKind.Property => PropertyIcon,
+            ElemKind.AttachedProperty => AttachedPropertyIcon,
             ElemKind.EnumValue => EnumIcon,
+            ElemKind.Boolean => BooleanIcon,
             ElemKind.CData => XmlCDataIcon,
             ElemKind.Comment => XmlCommentIcon,
             _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)

@@ -1,4 +1,4 @@
-﻿// Copyright © 2026 Oleksandr Kukhtin. All rights reserved.
+// Copyright © 2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -13,22 +13,225 @@ namespace A2v10XamlAutocomplete;
 
 internal class XamlCompletionCommitManager : IAsyncCompletionCommitManager
 {
-    readonly ImmutableArray<Char> commitChars = [' ', '\'', '"', ',', '.', ';', ':'];
+    static readonly ImmutableArray<char> _commitChars =
+        ImmutableArray.Create(' ', '>', '/', '=', '"', '\'');
 
-    public IEnumerable<char> PotentialCommitCharacters => commitChars;
+    public IEnumerable<char> PotentialCommitCharacters => _commitChars;
 
-    public bool ShouldCommitCompletion(IAsyncCompletionSession session, SnapshotPoint location, char typedChar, CancellationToken token)
+    public bool ShouldCommitCompletion(
+        IAsyncCompletionSession session,
+        SnapshotPoint location,
+        char typedChar,
+        CancellationToken token)
     {
-        return true;
+        switch (typedChar)
+        {
+            case ' ':
+            case '>':
+            case '/':
+            case '"':
+                return true;
+            default:
+                return false;
+        }
     }
 
-    public CommitResult TryCommit(IAsyncCompletionSession session, ITextBuffer buffer, CompletionItem item, char typedChar, CancellationToken token)
+    public CommitResult TryCommit(
+        IAsyncCompletionSession session,
+        ITextBuffer buffer,
+        CompletionItem item,
+        char typedChar,
+        CancellationToken token)
     {
-        if (item.Properties.TryGetProperty<Element>(nameof(Element), out var elem))
-        {
+        if (!item.Properties.TryGetProperty<Element>(nameof(Element), out var elem))
+            return CommitResult.Unhandled;
 
-            return CommitResult.Unhandled; // use default commit mechanism.
+        switch (elem.Kind)
+        {
+            case Element.ElemKind.Tag:
+                return CommitTag(session, buffer, item, typedChar);
+            case Element.ElemKind.ClosingTag:
+                return CommitClosingTag(session, buffer, item, typedChar);
+            case Element.ElemKind.Property:
+            case Element.ElemKind.AttachedProperty:
+                return CommitAttribute(session, buffer, item, typedChar);
+            case Element.ElemKind.EnumValue:
+            case Element.ElemKind.Boolean:
+                return CommitValue(session, buffer, item, typedChar);
+            case Element.ElemKind.Comment:
+                return CommitComment(session, buffer, item);
+            case Element.ElemKind.CData:
+                return CommitCData(session, buffer, item);
+            default:
+                return CommitResult.Unhandled;
         }
-        return CommitResult.Unhandled; // use default commit mechanism.
+    }
+
+    static CommitResult CommitTag(
+        IAsyncCompletionSession session,
+        ITextBuffer buffer,
+        CompletionItem item,
+        char typedChar)
+    {
+        // typedChar == '\0' means Tab or Enter
+        if (typedChar == '\0')
+        {
+            var span = session.ApplicableToSpan
+                .GetSpan(buffer.CurrentSnapshot);
+            using (var edit = buffer.CreateEdit())
+            {
+                edit.Replace(span, item.DisplayText + " ");
+                edit.Apply();
+            }
+            return new CommitResult(
+                true, CommitBehavior.SuppressFurtherTypeCharCommandHandlers);
+        }
+
+        if (typedChar == '>' || typedChar == '/')
+        {
+            var span = session.ApplicableToSpan
+                .GetSpan(buffer.CurrentSnapshot);
+            using (var edit = buffer.CreateEdit())
+            {
+                edit.Replace(span, item.DisplayText + typedChar);
+                edit.Apply();
+            }
+            return new CommitResult(
+                true, CommitBehavior.SuppressFurtherTypeCharCommandHandlers);
+        }
+
+        if (typedChar == ' ')
+        {
+            // User typed space; VS will insert the space after commit.
+            // We just insert the tag name without trailing space.
+            return CommitResult.Unhandled;
+        }
+
+        return CommitResult.Unhandled;
+    }
+
+    static CommitResult CommitClosingTag(
+        IAsyncCompletionSession session,
+        ITextBuffer buffer,
+        CompletionItem item,
+        char typedChar)
+    {
+        var span = session.ApplicableToSpan
+            .GetSpan(buffer.CurrentSnapshot);
+
+        // If user typed '>', don't duplicate it
+        String suffix = typedChar == '>' ? "" : ">";
+
+        using (var edit = buffer.CreateEdit())
+        {
+            edit.Replace(span, item.DisplayText + suffix);
+            edit.Apply();
+        }
+
+        return new CommitResult(
+            true, CommitBehavior.SuppressFurtherTypeCharCommandHandlers);
+    }
+
+    static CommitResult CommitAttribute(
+        IAsyncCompletionSession session,
+        ITextBuffer buffer,
+        CompletionItem item,
+        char typedChar)
+    {
+        var span = session.ApplicableToSpan
+            .GetSpan(buffer.CurrentSnapshot);
+        String insertText = item.DisplayText + "=\"\"";
+
+        using (var edit = buffer.CreateEdit())
+        {
+            edit.Replace(span, insertText);
+            edit.Apply();
+        }
+
+        // Position caret between the quotes: after AttrName="
+        int caretPosition = span.Start.Position
+            + item.DisplayText.Length + 2; // 2 = ="
+        var newSnapshot = buffer.CurrentSnapshot;
+        var caretPoint = new SnapshotPoint(newSnapshot, caretPosition);
+        session.TextView.Caret.MoveTo(caretPoint);
+
+        return new CommitResult(
+            true, CommitBehavior.SuppressFurtherTypeCharCommandHandlers);
+    }
+
+    static CommitResult CommitValue(
+        IAsyncCompletionSession session,
+        ITextBuffer buffer,
+        CompletionItem item,
+        char typedChar)
+    {
+        if (typedChar == '"')
+        {
+            // User typed closing quote; let VS do the standard insert.
+            return CommitResult.Unhandled;
+        }
+
+        // Tab/Enter: insert value + closing quote
+        var span = session.ApplicableToSpan
+            .GetSpan(buffer.CurrentSnapshot);
+
+        using (var edit = buffer.CreateEdit())
+        {
+            edit.Replace(span, item.DisplayText + "\"");
+            edit.Apply();
+        }
+
+        return new CommitResult(
+            true, CommitBehavior.SuppressFurtherTypeCharCommandHandlers);
+    }
+
+    static CommitResult CommitComment(
+        IAsyncCompletionSession session,
+        ITextBuffer buffer,
+        CompletionItem item)
+    {
+        var span = session.ApplicableToSpan
+            .GetSpan(buffer.CurrentSnapshot);
+        String insertText = "!--  -->";
+
+        using (var edit = buffer.CreateEdit())
+        {
+            edit.Replace(span, insertText);
+            edit.Apply();
+        }
+
+        // Position caret after "!-- " (4 chars from start of inserted text)
+        int caretPosition = span.Start.Position + 4;
+        var newSnapshot = buffer.CurrentSnapshot;
+        var caretPoint = new SnapshotPoint(newSnapshot, caretPosition);
+        session.TextView.Caret.MoveTo(caretPoint);
+
+        return new CommitResult(
+            true, CommitBehavior.SuppressFurtherTypeCharCommandHandlers);
+    }
+
+    static CommitResult CommitCData(
+        IAsyncCompletionSession session,
+        ITextBuffer buffer,
+        CompletionItem item)
+    {
+        var span = session.ApplicableToSpan
+            .GetSpan(buffer.CurrentSnapshot);
+        String insertText = "![CDATA[]]>";
+
+        using (var edit = buffer.CreateEdit())
+        {
+            edit.Replace(span, insertText);
+            edit.Apply();
+        }
+
+        // Position caret after "![CDATA[" (8 chars from start of inserted text)
+        int caretPosition = span.Start.Position + 8;
+        var newSnapshot = buffer.CurrentSnapshot;
+        var caretPoint = new SnapshotPoint(newSnapshot, caretPosition);
+        session.TextView.Caret.MoveTo(caretPoint);
+
+        return new CommitResult(
+            true, CommitBehavior.SuppressFurtherTypeCharCommandHandlers);
     }
 }
