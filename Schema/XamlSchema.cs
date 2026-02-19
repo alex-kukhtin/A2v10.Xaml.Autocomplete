@@ -290,11 +290,10 @@ internal sealed class XamlSchema
 
         foreach (var kvp in elem.Properties)
         {
-            // Content property is always available as attribute
-            // (used for bind expressions like Content="@[Value]").
-            bool isContentProp = kvp.Key == elem.ContentProperty;
-
-            if (!isContentProp && !kvp.Value.CanBeAttribute)
+            // In A2v10 XAML any non-collection property can be an attribute
+            // (via bind expressions like Command="{BindCmd Execute, ...}").
+            // Only exclude collections — they require child elements.
+            if (kvp.Value.IsCollection)
                 continue;
             if (existingAttrs != null && existingAttrs.Contains(kvp.Key))
                 continue;
