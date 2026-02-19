@@ -355,11 +355,29 @@ internal static class XmlContextParser
     private static XmlContext BuildContentContext(
         string text, int scanStart, int position)
     {
+        // Scan backward to find partial text the user is typing
+        // between tags. Only letters/digits/underscore — not '.', ':'
+        // which could cross attribute boundaries.
+        int partialStart = position;
+        while (partialStart > scanStart
+            && partialStart > 0)
+        {
+            char ch = text[partialStart - 1];
+            if (char.IsLetterOrDigit(ch) || ch == '_')
+                partialStart--;
+            else
+                break;
+        }
+
+        string partial = partialStart < position
+            ? text.Substring(partialStart, position - partialStart)
+            : string.Empty;
+
         return new XmlContext
         {
             Type = XmlContextType.Content,
-            PartialInput = string.Empty,
-            PartialInputStart = position,
+            PartialInput = partial,
+            PartialInputStart = partialStart,
             ParentTag = FindParentTag(text, scanStart, position)
         };
     }

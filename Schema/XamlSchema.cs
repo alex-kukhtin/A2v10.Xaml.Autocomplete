@@ -290,9 +290,11 @@ internal sealed class XamlSchema
 
         foreach (var kvp in elem.Properties)
         {
-            if (!kvp.Value.CanBeAttribute)
-                continue;
-            if (elem.ContentAsXamlAttr && kvp.Key == elem.ContentProperty)
+            // Content property is always available as attribute
+            // (used for bind expressions like Content="@[Value]").
+            bool isContentProp = kvp.Key == elem.ContentProperty;
+
+            if (!isContentProp && !kvp.Value.CanBeAttribute)
                 continue;
             if (existingAttrs != null && existingAttrs.Contains(kvp.Key))
                 continue;

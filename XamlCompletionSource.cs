@@ -41,7 +41,7 @@ internal class XamlCompletionSource : IAsyncCompletionSource
             return CompletionStartData.DoesNotParticipateInCompletion;
 
         int length = position - context.PartialInputStart;
-        if (length < 1)
+        if (length < 0)
             return CompletionStartData.DoesNotParticipateInCompletion;
 
         var span = new SnapshotSpan(
