@@ -28,7 +28,7 @@ internal class XamlCompletionSource : IAsyncCompletionSource
         if (trigger.Reason == CompletionTriggerReason.Insertion)
         {
             char ch = trigger.Character;
-            if (ch != '<' && ch != ' ' && ch != '"' && ch != '\''
+            if (ch != ' ' && ch != '"' && ch != '\''
                 && ch != '.' && ch != '/' && !char.IsLetter(ch))
                 return CompletionStartData.DoesNotParticipateInCompletion;
         }
@@ -41,7 +41,7 @@ internal class XamlCompletionSource : IAsyncCompletionSource
             return CompletionStartData.DoesNotParticipateInCompletion;
 
         int length = position - context.PartialInputStart;
-        if (length < 0)
+        if (length < 1)
             return CompletionStartData.DoesNotParticipateInCompletion;
 
         var span = new SnapshotSpan(
